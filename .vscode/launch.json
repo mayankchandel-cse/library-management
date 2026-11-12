@@ -1,0 +1,23 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Run Library System (GUI)",
+      "request": "launch",
+      "mainClass": "com.library.main.Main",
+      "projectName": "library-management",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "type": "java",
+      "name": "Run LibraryDemo (console)",
+      "request": "launch",
+      "mainClass": "com.library.main.LibraryDemo",
+      "projectName": "library-management",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    }
+  ]
+}

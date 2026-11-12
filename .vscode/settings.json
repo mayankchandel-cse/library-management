@@ -1,0 +1,8 @@
+{
+  // Library Management System — VS Code settings (Java 17, UTF-8)
+  "files.encoding": "utf8",
+  "java.project.sourcePaths": ["src"],
+  "java.project.outputPath": "out",
+  "java.compile.nullAnalysis.mode": "automatic",
+  "editor.formatOnSave": false
+}
