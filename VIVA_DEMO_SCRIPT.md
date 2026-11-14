@@ -1,71 +1,71 @@
-# Library Management System — 2-minute viva demo script (VS Code)
+# Viva Demo Script — Library Management System (Spring Boot + JDBC)
 
-Not a report — a timed script to read / rehearse before the viva.
-Run it from VS Code using the launch configs already in `.vscode/launch.json`.
-Pure Java 17 + Swing — no database, no server.
+2-minute timed demo. Run the GUI first with `mvn spring-boot:run`.
+Keep the console demo ready in a second terminal
+(`mvn spring-boot:run -Dspring-boot.run.main-class=com.library.main.LibraryConsoleDemo`
+or run `LibraryConsoleDemo` from VS Code).
 
-## 30-second pre-flight (do before the viva)
+## 0:00 — Open the app, Dashboard counts
 
-1. JDK 17: `java -version` and `javac -version` both say 17+.
-2. Open the **folder** `library-management/` in VS Code (not a single
-   file), wait for "Importing Java project" to finish, Extension Pack
-   for Java installed.
-3. Know the logins: admin / admin123, librarian / lib123.
-4. Know the two rules: issue period is **14 days**, fine is
-   **Rs 5 per day late**.
-5. If anything looks empty, the app falls back to the built-in sample
-   data (12 books, 5 members) — say so, and carry on.
+> "This is my Library Management System, built with Spring Boot, JDBC
+> and Swing. There is no login screen — it opens straight into the
+> Dashboard."
 
-## The 2-minute script
+Open the app. Point at the Dashboard stat cards and read them out:
+total books, total members, issued now, overdue, and fines due in Rs.
+Say: "These numbers come live from the MySQL database through the
+`LibraryService` — the GUI gets the Spring bean, it does not create the
+service itself."
 
-**0:00–0:20 — What it is, and log in**
-> "Library Management System, built in pure Java and Swing — no
-> database. Books, members, issues and fines, saved to a file with
-> Java serialization."
+## 0:20 — Books search "java" (SQL LIKE)
 
-Open `src/com/library/main/Main.java`, press F5, pick
-**"Run Library System (GUI)"**. Log in as `admin` / `admin123`.
-Say: "Admin and Librarian are separate roles."
+> "Now I search for books. This search is a SQL LIKE query, not a
+> sorting algorithm."
 
-**0:20–0:50 — Books: search + sort**
-Click **Books**. In the search box type `Java` — the list filters to
-the Java books. Change **Sort by** and name the algorithm each time:
-- "Title — Quick Sort" → O(n log n) average.
-- "Year — Merge Sort" → O(n log n), stable.
-Say: "The sort menu calls the real sort code in the panel, not just
-a library sort. Add / Edit / Delete are on the same screen."
+Click **Books** in the sidebar. Type `java` in the search box and click
+**Search**. The table shows only the matching books (title or author).
+Say: "The panel calls `service.searchBooks("java")`, the repository runs
+`SELECT ... WHERE title LIKE ? OR author LIKE ?` with a
+`PreparedStatement`, so it is safe from SQL injection."
+Click **Show All** to bring all books back.
 
-**0:50–1:20 — Issue a book, then return it late and show the fine**
-Click **Issue / Return**. Issue book id **2** ("Java: The Complete
-Reference") to member id **1** (Aarav Sharma).
-Say: "Due date is today + 14 days."
-Then return issue id **3** — the overdue sample record (due 6 days
-ago). Say: "Fine is Rs 5 per day late, so 6 days = Rs 30. The copy
-goes back on the shelf and the record becomes Returned."
+## 0:50 — Issue book 2 to member 1, due +14 days
 
-**1:20–1:45 — Overdue + Reports**
-Click **Overdue & Fines**: "This list is recomputed from the due
-dates, and a background reminder thread re-checks it every
-30 seconds without blocking the screen."
-Click **Reports** → **Generate Report**: "The report is written to
-data/books_report.txt, and Export CSV writes
-data/books_export.csv."
+> "Next I issue a book. The due date is 14 days from today."
 
-**1:45–2:00 — Close on the console demo**
-> "The same logic runs on the console in LibraryDemo — searching,
-> sorting, issue/return and the fine calculation, plus the file
-> save and load."
+Click **Issue / Return**. Type Book ID `2` and Member ID `1`, then click
+**Issue Book**. Read the full message out loud, for example:
+"Issued! Issue ID: ... — Due date: 2026-11-26 (14 days from today...)."
+Say: "The service inserts the issue row and reduces the available
+copies in one transaction, so both happen together or not at all."
 
-Run **"Run LibraryDemo (console)"** from the same launch menu and
-show the output. If the examiner asks a concept question, answers
-are in `VIVA_QA.md`.
+## 1:20 — Return overdue issue 3, Rs 30 fine
 
-## If something goes wrong live
+> "Now I return an overdue book and the fine is calculated."
 
-| Problem | What to say / do |
-|---|---|
-| Login fails | Use the demo buttons on the login screen: "Use Admin" / "Use Librarian". |
-| A book won't issue | It has 0 available copies — pick another book id, or return one first. |
-| A book won't delete | Correct behaviour: a book that is currently issued cannot be deleted — return it first. |
-| `javac: command not found` | JDK 17 isn't on PATH — say so, and run the already-compiled `out/` folder if you have it. |
-| No data file yet | Normal on first run — the app loads the 12 sample books and 5 sample members. |
+In the **Return a Book** section, type Issue ID `3` and click
+**Return Book**. Read the message: "Returned! Issue ID: 3 — Fine:
+Rs 30 (Rs 5 per day late)." Say: "Issue 3 was 6 days late, and the
+`FineCalculator` does Rs 5 times days late, so Rs 30. If it were on
+time, the fine would be Rs 0."
+
+## 1:45 — Overdue panel + console demo close
+
+> "Finally, the overdue list and the console demo."
+
+Click **Overdue & Fines**. Show the table: issue ID, book, member, due
+date, days late and fine. Point at the footer: "Fine rule: Rs 5 per day
+late." Then switch to the terminal and run `LibraryConsoleDemo`. Point
+at its output: it issues/returns through the same `LibraryService` and
+shows a **Rs 25 fine demo** (5 days late x Rs 5).
+
+> "That is the full flow: dashboard, search, issue, return with fine,
+> and overdue list — all through Spring Boot and JDBC. Thank you."
+
+## If something goes wrong
+
+- If the app does not start: say the database is checked first —
+  MariaDB must be running and `library_db` must exist — then start again.
+- If a search shows nothing: check the spelling, then click **Show All**.
+- If issuing fails: the book may have 0 available copies, or the member
+  may already be at their book limit — read the error message on screen.

@@ -1,199 +1,134 @@
-# Library Management System — Pure Java + Swing
+# Library Management System — Spring Boot + JDBC
 
-A college-level (B.Tech CSE) library management system built with
-**pure Java 17 and Java Swing only**. No database, no server, no JDBC,
-no external libraries. Books, members, issues and fines are stored in
-Java collections and saved to a file with Java serialization
-(`data/library.ser`).
+A library management system for a college project (Topic 2). It manages
+books, members, issuing and returning books, overdue books and fines.
+The desktop GUI is built with Java Swing, and all database work goes
+through Spring Boot with JDBC (`JdbcTemplate`) and MySQL / MariaDB.
 
-## Features
-
-- Log in as **Admin** (`admin` / `admin123`) or **Librarian**
-  (`librarian` / `lib123`)
-- Dashboard: total books/copies, members, books issued, overdue, fines due
-- Books: browse, search (title / author / category), sort by title
-  (Quick Sort), year (Merge Sort) or author, Add / Edit / Delete
-- Members: view and add members (Student / Faculty / Staff)
-- Issue / Return: issue a book (14-day loan), return it — fine is
-  **Rs 5 per day late**, calculated automatically
-- Overdue & Fines: overdue list with days late and fine, plus a
-  background reminder thread that re-checks every 30 seconds
-- Reports: generate a text report (`data/books_report.txt`) and export
-  the catalogue as CSV (`data/books_export.csv`)
-- Console demo: `com.library.main.LibraryDemo` shows searching, sorting,
-  issue/return, fines and file save/load on the console
+There is **no login screen** in this version — the application opens
+straight into the Dashboard.
 
 ## Prerequisites
 
-| Item | Version / notes |
-|---|---|
-| JDK | 17 or later (`java -version`, `javac -version`) |
-| IDE (optional) | VS Code, IntelliJ IDEA or Eclipse |
-| OS | Windows / macOS / Linux |
+- JDK 17
+- Maven 3.9.9
+- MariaDB (or MySQL) running on your computer, port 3306
 
-No database or server is needed. No JAR to download.
+## Create the database
 
-## Quick start — command line
-
-From the project root (`library-management/`):
+Run this once in a terminal:
 
 ```bash
-# Linux / macOS — NOTE: -encoding UTF-8 is required: some source files
-# contain special characters, and javac's default encoding on some
-# systems is US-ASCII, which fails the build without it.
-javac -encoding UTF-8 -d out $(find src -name "*.java")
-java  -cp out com.library.main.Main
-
-# Windows (PowerShell / cmd)
-javac -encoding UTF-8 -d out (Get-ChildItem -Recurse src -Filter *.java).FullName
-java  -cp out com.library.main.Main
+sudo mysql -u root -e "CREATE DATABASE IF NOT EXISTS library_db; CREATE USER IF NOT EXISTS 'library'@'localhost' IDENTIFIED BY 'library123'; GRANT ALL PRIVILEGES ON library_db.* TO 'library'@'localhost'; FLUSH PRIVILEGES;"
 ```
 
-Run the console demo instead:
+The application connects as user `library` with password `library123`
+to the database `library_db`. The tables and sample data are created
+automatically on startup by `schema.sql` and `data.sql`
+(`spring.sql.init.mode=always` in `application.properties`).
+
+## Run the application
 
 ```bash
-java -cp out com.library.main.LibraryDemo
+mvn spring-boot:run
 ```
 
-## Run it in VS Code
+The Dashboard window opens. Use the sidebar on the left:
 
-1. Install the **Extension Pack for Java** (Microsoft) from Extensions
-   (Ctrl+Shift+X).
-2. **File → Open Folder** → select the `library-management/` folder
-   (open the *folder*, not a single file).
-3. Wait 30–60 seconds for "Importing Java project" to finish.
-4. Open `src/com/library/main/Main.java` → click **Run** ▶ above
-   `public static void main` (or press **F5** and pick
-   **"Run Library System (GUI)"**).
-5. Pick **"Run LibraryDemo (console)"** from the same launch menu to
-   run the console demo. The `.vscode/` folder in this project already
-   has both launch configs.
+- **Dashboard** — live counts: total books, total members, issued now,
+  overdue, fines due.
+- **Books** — search by title or author, add, edit or delete books.
+- **Members** — register a member; click a member row to see their
+  borrowing history.
+- **Issue / Return** — issue a book (due in 14 days) or return a book
+  by issue ID and see the fine.
+- **Overdue & Fines** — overdue books, days late, fine per book.
+  Fine rule: **Rs 5 per day late.**
 
-## Run it in IntelliJ IDEA
+There is also a console demo: `LibraryConsoleDemo` (run it from
+VS Code, see below). It shows the same service calls in the terminal.
 
-1. **File → Open** → select the `library-management/` folder.
-2. Set the SDK to **Java 17**: File → Project Structure → SDK.
-3. Right-click `src/` → **Mark Directory as → Sources Root**.
-4. Open `src/com/library/main/Main.java` → click the green **Run** arrow.
+## Run in VS Code
 
-## Run it in Eclipse
+1. Open this folder in VS Code.
+2. Install the **Extension Pack for Java** if it is not installed yet.
+3. Press **F5** and pick **Run Library System (Spring GUI)**, or open
+   `src/main/java/com/library/main/LibraryApplication.java` and click
+   **Run** above `main`.
+4. To run the console demo instead, pick
+   **Run LibraryConsoleDemo** from the run menu.
 
-1. **File → New → Java Project** → uncheck "use default location" →
-   browse to `library-management/`.
-2. Set **Java Compiler → Compiler compliance level → 17**.
-3. Ensure `src/` is on the build path.
-4. Right-click `src/com/library/main/Main.java` → **Run As →
-   Java Application**.
-
-## Default logins
-
-| Role | Username | Password |
-|---|---|---|
-| Admin | `admin` | `admin123` |
-| Librarian | `librarian` | `lib123` |
+The launch settings are in `.vscode/launch.json`.
 
 ## Project structure
 
 ```
-library-management/
-├── README.md
-├── VIVA_QA.md
-├── VIVA_DEMO_SCRIPT.md
+library-management-spring/
+├── pom.xml                                  Spring Boot 3.2.x, spring-boot-starter-jdbc,
+│                                            spring-boot-starter, mysql-connector-j
+├── src/main/java/com/library/
+│   ├── main/
+│   │   ├── LibraryApplication.java          Entry point: starts Spring (no web server),
+│   │   │                                    gets the LibraryService bean, opens the GUI
+│   │   └── LibraryConsoleDemo.java          Console demo of the same service
+│   ├── model/
+│   │   ├── Book.java                        Book: id, title, author, ISBN, category,
+│   │   │                                    year, total / available copies
+│   │   ├── Member.java                      Member: id, name, email, phone, type, max books
+│   │   └── IssueRecord.java                 Issue: book, member, dates, fine, status
+│   ├── repository/
+│   │   ├── BookRepository.java              Book SQL with JdbcTemplate
+│   │   ├── MemberRepository.java            Member SQL with JdbcTemplate
+│   │   └── IssueRepository.java             Issue / return / overdue SQL
+│   ├── service/
+│   │   ├── LibraryService.java              Business rules: issue, return, fines, stats
+│   │   └── FineCalculator.java              Fine = Rs 5 x days late
+│   └── gui/
+│       ├── Theme.java                       Navy #14213D / amber #FCA311 look, shared helpers
+│       ├── MainFrame.java                   Window, sidebar, CardLayout, top search bar
+│       ├── DashboardPanel.java              Stat cards + how-to-use guide
+│       ├── BooksPanel.java                  Book table, search, add / edit / delete
+│       ├── MembersPanel.java                Member table, add form, borrowing history
+│       ├── IssuePanel.java                  Issue form, return form, due date / fine message
+│       └── OverduePanel.java                Overdue table, days late, fine, refresh
+├── src/main/resources/
+│   ├── application.properties               Database connection, spring.sql.init.mode=always
+│   ├── schema.sql                           CREATE TABLE books, members, issues
+│   └── data.sql                             Sample books, members and issues
 ├── .vscode/
-│   ├── settings.json           # src/ is the source root, output is out/
-│   └── launch.json             # Run GUI / Run LibraryDemo configs
-├── data/                       # created at runtime: library.ser,
-│                               #   books_report.txt, books_export.csv
-└── src/com/library/
-    ├── main/
-    │   ├── Main.java           # entry point (Nimbus L&F, opens LoginFrame)
-    │   └── LibraryDemo.java    # console demonstration
-    ├── model/                  # Book, Member, User, Librarian,
-    │                           #   IssueRecord (Part A)
-    ├── storage/
-    │   └── DataStore.java      # serialization save/load (Part A)
-    ├── service/
-    │   └── LibraryService.java # issue/return, fines, search, stats (Part B)
-    ├── util/
-    │   └── Sorting.java        # Quick Sort, Merge Sort (Part B)
-    ├── exceptions/             # LibraryException, BookNotFoundException,
-    │                           #   BookNotAvailableException,
-    │                           #   InvalidInputException (Part A)
-    └── gui/                    # Swing UI (Part C — this part)
-        ├── SampleData.java     # 12 books, 5 members, demo accounts
-        ├── Theme.java          # colours, fonts, styled widgets
-        ├── LoginFrame.java     # login (Admin / Librarian)
-        ├── MainFrame.java      # CardLayout shell, sidebar, shared state
-        ├── DashboardPanel.java # stats cards, recent issues
-        ├── BooksPanel.java     # book table, search, sort, Add/Edit/Delete
-        ├── MembersPanel.java   # member table, Add Member form
-        ├── IssuePanel.java     # issue (14 days) / return (Rs 5/day fine)
-        ├── OverduePanel.java   # overdue list, reminder thread
-        └── ReportsPanel.java   # text report + CSV export
+│   ├── settings.json
+│   └── launch.json
+├── README.md
+├── VIVA_QA.md                               12 viva questions and answers
+└── VIVA_DEMO_SCRIPT.md                      2-minute demo script
 ```
 
-## How the GUI works
+## How each Topic-2 requirement is met
 
-- **Navigation:** `MainFrame` uses a `CardLayout`; the left sidebar
-  switches between Dashboard, Books, Members, Issue/Return,
-  Overdue & Fines and Reports. The top bar has a global book search.
-- **Shared state:** `MainFrame` holds the book, member and issue
-  lists, so every panel sees the same data without re-reading the file.
-- **Service first, demo fallback:** panels use `LibraryService` when
-  it is available; every service call is in try-catch and falls back
-  to the in-memory lists from `gui/SampleData.java`, so the GUI never
-  goes blank.
-- **Business rules:** issue period is 14 days; fine is Rs 5 per day
-  late (see `SampleData.FINE_PER_DAY` / `ISSUE_DAYS` and
-  `MainFrame.computeFine`).
-- **Threading:** the overdue reminder runs on a daemon thread and
-  updates the UI only through `SwingUtilities.invokeLater`, so the
-  Swing event-dispatch thread is never blocked.
-
-## Service / model API (integration contract — Part C calls these)
-
-```java
-// model — bean style: no-arg constructor + setters/getters
-Book:        getId/getTitle/getAuthor/getIsbn/getCategory/getPublisher/
-             getYear/getCopies/getAvailableCopies (+ matching setters)
-Member:      getId/getName/getEmail/getPhone/getMembershipType (+ setters)
-User:        getId/getName/getUsername/getPassword/getRole (+ setters)
-Librarian extends User
-IssueRecord: getId/getBookId/getMemberId/getIssueDate/getDueDate/
-             getReturnDate/getFine/getStatus (+ setters);
-             getIssueDate()/getDueDate()/getReturnDate() are LocalDate
-
-// service — instance methods, no-arg constructor; all synchronized
-LibraryService:
-    Book              addBook(Book book)          // throws InvalidInputException
-    boolean           removeBook(int bookId)      // no updateBook: GUI does remove + add
-    List<Book>        getAllBooks()
-    Book              getBookById(int bookId)
-    List<Book>        searchBooks(String query)
-    Member            registerMember(Member member)
-    List<Member>      getAllMembers()
-    Member            getMemberById(int memberId)
-    IssueRecord       issueBook(int bookId, int memberId)  // throws InvalidInputException
-    double            returnBook(int issueId)     // returns the fine (Rs)
-    IssueRecord       getIssueById(int issueId)
-    List<IssueRecord> getAllIssues()
-    List<IssueRecord> getOverdueRecords()
-    Map<String,Object> getStats()                 // totalBooks, issued, overdue, ...
-    List<Book>        getMostIssuedBooks()
-
-// NOTE: the service mutates the shared Book objects (issue decrements
-// availableCopies, return increments it), so the GUI must not repeat
-// those updates on the service path — see MainFrame.issueBook/returnBook.
-```
+| Requirement | Where it is met |
+|---|---|
+| 1. Book management (add, update, delete, search) | `BooksPanel.java` + `LibraryService` (`addBook`, `updateBook`, `deleteBook`, `searchBooks`) + `BookRepository.java` (SQL LIKE search) |
+| 2. Member management (register, borrowing history) | `MembersPanel.java` + `LibraryService` (`registerMember`, `getBorrowingHistory`) + `MemberRepository.java` |
+| 3. Issue and return with due date (14 days) | `IssuePanel.java` + `LibraryService` (`issueBook`, `returnBook`) + `IssueRepository.java` |
+| 4. Fine calculation (Rs 5 per day late) | `FineCalculator.java` + `IssuePanel.java` (shows the fine) + `OverduePanel.java` (fine per book) |
+| 5. Overdue tracking | `OverduePanel.java` + `LibraryService.getOverdueRecords()` + `IssueRepository.java` |
+| 6. Reports / statistics (dashboard counts) | `DashboardPanel.java` + `LibraryService.getStats()` (total books, total members, issued, overdue, total fines) |
 
 ## Troubleshooting
 
-| Problem | Fix |
-|---|---|
-| `javac: command not found` | Install JDK 17 and put it on `PATH`; check `java -version`. |
-| `UnsupportedClassVersionError` | You compiled with JDK 17+ but are running an older JRE (or vice versa) — use the same JDK for both. |
-| Red squiggles in VS Code / "cannot resolve" | Java server still loading — wait, then **Ctrl+Shift+P → Java: Clean Java Language Server Workspace** and reload. |
-| Run button missing above `main` in VS Code | Extension Pack for Java isn't installed, or you opened a file instead of the folder. |
-| GUI looks unstyled / tiny fonts | Nimbus L&F is optional; the app falls back to the platform L&F. Colours are set explicitly in `gui/Theme.java`. |
-| `data/library.ser` appears in the project folder | Normal — that's the serialized data file. Delete it to reset to the sample data. |
-| A book cannot be deleted | Correct behaviour: a book that is currently issued cannot be deleted — return it first. |
+- **Cannot connect to the database / port 3306:** check MariaDB is
+  running (`sudo systemctl status mariadb`) and that the database and
+  user exist — run the `CREATE DATABASE` / `CREATE USER` commands above
+  again.
+- **Tables are empty or missing:** the schema is re-created on every
+  start because `spring.sql.init.mode=always` is set in
+  `application.properties`. Stop the app, check the database, and run
+  it again. You can also re-run `schema.sql` and `data.sql` by hand in
+  the `mysql` client.
+- **Wrong Java version:** run `java -version` — it must say 17.
+  If another version is used, set `JAVA_HOME` to your JDK 17 folder.
+- **Maven not found:** use the full path to Maven 3.9.9, or add its
+  `bin` folder to your `PATH`.
+- **GUI does not open:** make sure you ran `LibraryApplication`
+  (the GUI), not only the console demo, and check the terminal for a
+  database error first — the window only opens after Spring starts.
