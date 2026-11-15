@@ -1,1 +1,0 @@
-{"configurations":[{"mainClass":"com.library.main.LibraryApplication","name":"Run Library System (Spring GUI)","projectName":"library-management-spring","request":"launch","type":"java"},{"mainClass":"com.library.main.LibraryConsoleDemo","name":"Run LibraryConsoleDemo","projectName":"library-management-spring","request":"launch","type":"java"}],"version":"0.2.0"}
