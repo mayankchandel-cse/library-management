@@ -1,0 +1,6 @@
+# Build output - compiled classes are generated locally, do not commit them
+target/
+*.class
+
+# Logs
+*.log
