@@ -14,6 +14,16 @@ A simple library system that does **only** these 6 things, nothing else:
 No GUI, no login screen, no reminders, no reports, no extra features.
 The app is a console menu, so it is easy to run and easy to explain in a viva.
 
+## Item 6 — Spring Boot annotations + JdbcTemplate, in 5 lines
+
+1. `@SpringBootApplication` (`LibraryApplication`) starts Spring.
+2. `@Configuration` + `@Bean` (`DatabaseConfig`) make one `DataSource` — the MySQL connection. Spring Boot then makes a `JdbcTemplate` from it.
+3. `@Repository` (`BookRepository`, `StudentRepository`, `IssueRepository`) run all SQL through that `JdbcTemplate`. Spring hands it to them; they never open a connection themselves.
+4. `@Service` (`LibraryService`) holds the rules, `@Component` (`FineCalculator`) holds the fine. Spring creates one of each and wires them together.
+5. `@Transactional` (on `issueBook` / `returnBook`) means: insert the issue row AND change the available copies together, or neither happens.
+
+That is the whole of item 6. `BookJdbcDao` is the one exception on purpose — it uses plain JDBC (`PreparedStatement` + `ResultSet`) with no JdbcTemplate, because that is item 5.
+
 ## Prerequisites
 
 - JDK 17

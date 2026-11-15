@@ -8,13 +8,17 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 /**
- * Checklist items 1 and 6 (part 2): JdbcTemplate + Spring annotations.
- * @Repository marks this as the database layer. JdbcTemplate does the
- * open/run/close work for us; we only write the SQL and the RowMapper.
+ * Checklist item 6 - JdbcTemplate, in the simplest form.
+ *
+ * @Repository = "this class talks to the database".
+ * JdbcTemplate is made by Spring Boot from the DataSource bean.
+ * It opens and closes the connection for us; we only write the SQL
+ * and the RowMapper (how one row becomes one Book).
  */
 @Repository
 public class BookRepository {
 
+    // Spring hands us the JdbcTemplate. We never create it ourselves.
     private final JdbcTemplate jdbcTemplate;
 
     public BookRepository(JdbcTemplate jdbcTemplate) {

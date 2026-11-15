@@ -14,10 +14,13 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * Checklist items 1-4, business rules only. No SQL here, no screen code here.
- * @Service marks this as the business layer. Spring gives us the
- * repositories through the constructor (dependency injection with @Autowired
- * behaviour) instead of us doing "new BookRepository()".
+ * Checklist item 6 - the business layer.
+ *
+ * @Service = "this class holds the library rules, Spring makes one of it".
+ * Spring gives us the repositories through the constructor below
+ * (dependency injection) instead of us doing "new BookRepository()".
+ * @Transactional (on issueBook / returnBook) = "do all the database
+ * steps in this method together, or none of them".
  */
 @Service
 public class LibraryService {
